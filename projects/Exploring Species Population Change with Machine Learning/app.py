@@ -4,17 +4,16 @@ import requests
 import plotly.express as px
 import pydeck as pdk
 
-# =========================
+
 # PAGE CONFIG
-# =========================
+
 st.set_page_config(page_title="Biodiversity Intelligence System", layout="wide")
 
 st.title("🌍 Biodiversity Intelligence Dashboard (LIVE GBIF)")
 st.markdown("Real-time global biodiversity monitoring & analysis system")
 
-# =========================
 # SPECIES LIST
-# =========================
+
 species_list = [
     "Panthera leo",
     "Panthera tigris",
@@ -28,9 +27,9 @@ species_list = [
     "Felis catus"
 ]
 
-# =========================
+
 # SIDEBAR CONTROLS
-# =========================
+
 st.sidebar.header("🔎 Control Panel")
 
 selected_species = st.sidebar.selectbox("Choose Species", species_list)
@@ -42,9 +41,8 @@ if custom_species:
 
 compare_species = st.sidebar.multiselect("Compare Species", species_list)
 
-# =========================
 # LIVE DATA (GBIF)
-# =========================
+
 @st.cache_data(ttl=3600)
 def load_data(species_name):
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={species_name}&limit=300"
@@ -76,18 +74,17 @@ if df.empty:
 
 df_clean = df.dropna(subset=["lat", "lon"])
 
-# =========================
+
 # FILTER BY COUNTRY
-# =========================
+
 countries = ["All"] + sorted(df_clean["country"].dropna().unique().tolist())
 selected_country = st.sidebar.selectbox("Filter by Country", countries)
 
 if selected_country != "All":
     df_clean = df_clean[df_clean["country"] == selected_country]
 
-# =========================
-# 🔥 RISK INTENSITY MODEL (NEW)
-# =========================
+# 🔥 RISK INTENSITY MODEL 
+
 country_density = df_clean["country"].value_counts().to_dict()
 
 df_clean["risk_score"] = df_clean["country"].map(country_density)
@@ -95,9 +92,9 @@ df_clean["risk_score"] = df_clean["country"].map(country_density)
 max_risk = df_clean["risk_score"].max()
 df_clean["risk_norm"] = (df_clean["risk_score"] / max_risk) * 255
 
-# =========================
+
 # 🌍 MAP
-# =========================
+
 st.subheader(f"🌍 Global Distribution: {selected_species}")
 
 map_fig = px.scatter_geo(
@@ -111,9 +108,8 @@ map_fig = px.scatter_geo(
 
 st.plotly_chart(map_fig, use_container_width=True)
 
-# =========================
 # 🔥 HEATMAP
-# =========================
+
 st.subheader("🔥 Biodiversity Hotspot Heatmap")
 
 heat_fig = px.density_map(
@@ -128,9 +124,9 @@ heat_fig = px.density_map(
 
 st.plotly_chart(heat_fig, use_container_width=True)
 
-# =========================
+
 # 📉 TREND
-# =========================
+
 st.subheader("📉 Observation Trend Over Time")
 
 df_clean["year"] = pd.to_numeric(df_clean["year"], errors="coerce")
@@ -140,9 +136,9 @@ if len(trend) > 1:
     fig = px.line(trend, x="year", y="observations")
     st.plotly_chart(fig, use_container_width=True)
 
-# =========================
+
 # 🧠 RISK INDICATOR
-# =========================
+
 st.subheader("🧠 Extinction Risk Indicator")
 
 if len(trend) > 2:
@@ -157,9 +153,9 @@ if len(trend) > 2:
 
     st.metric("Risk Status", risk)
 
-# =========================
+
 # 🌎 COUNTRY STATS
-# =========================
+
 st.subheader("🌎 Country Distribution (Top 10)")
 
 country_counts = df_clean["country"].value_counts().head(10)
@@ -173,9 +169,9 @@ with col2:
     fig_pie = px.pie(values=country_counts.values, names=country_counts.index)
     st.plotly_chart(fig_pie)
 
-# =========================
+
 # 🧬 SPECIES COMPARISON
-# =========================
+
 if compare_species:
 
     comp_data = []
@@ -201,9 +197,9 @@ if compare_species:
     fig = px.bar(comp_df, x="species", y="records")
     st.plotly_chart(fig, use_container_width=True)
 
-# =========================
+
 # 🧠 INSIGHTS
-# =========================
+
 st.subheader("🧠 Live Ecological Intelligence")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -221,9 +217,9 @@ with col4:
     score = len(df_clean) / max(df_clean["country"].nunique(), 1)
     st.metric("Data Spread Score", round(score, 2))
 
-# =========================
+
 # 🛰️ SATELLITE MODE
-# =========================
+
 st.subheader("🛰️ Satellite Mode: Earth Systems View")
 
 sat_mode = st.selectbox(
@@ -268,9 +264,9 @@ elif sat_mode == "Vegetation Index (NDVI)":
         )
     ))
 
-# =========================
-# 🔴 RISK GLOW OVERLAY MAP (NEW)
-# =========================
+
+# 🔴 RISK GLOW OVERLAY MAP 
+
 st.subheader("🔥 Ecological Risk Glow Map")
 
 risk_layer = pdk.Layer(
